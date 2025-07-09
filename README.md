@@ -53,6 +53,14 @@ With JSON body, for example:
    }
 ```
 
+Operations:
+
+    sum
+    subtraction
+    multiplication
+    division
+    
+
 Test example:
 
 ```bash
