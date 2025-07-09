@@ -37,9 +37,9 @@ public class CalculatorConsumer {
         MDC.put("requestId", request.getRequestId().toString());
         log.info("Received Kafka message: {} {} {}", request.getOperandA(), request.getOperation(), request.getOperandB());
 
-        BigDecimal result;
-
         try {
+            BigDecimal result;
+
             switch (request.getOperation()) {
                 case "sum":
                     result = calculatorService.sum(request.getOperandA(), request.getOperandB());
@@ -58,8 +58,11 @@ public class CalculatorConsumer {
             }
 
             request.setResult(result);
-            log.info("Calculated result: {}", result);
 
+        } catch (Exception e) {
+            log.error("Error while processing Kafka message: {}", e.getMessage());
+            request.setErrorMessage(e.getMessage());
+        } finally {
             Message<KafkaMessage> replyMessage = MessageBuilder
                     .withPayload(request)
                     .setHeader(KafkaHeaders.TOPIC, replyTopic)
@@ -67,11 +70,7 @@ public class CalculatorConsumer {
                     .build();
 
             kafkaTemplate.send(replyMessage);
-            log.info("Replied message sent to topic.");
-        } catch (Exception e) {
-            log.error("Error while processing Kafka message: {}", e.getMessage());
-            throw e;
-        } finally {
+            log.info("Replied message (success or error) sent to topic.");
             MDC.clear();
         }
     }
